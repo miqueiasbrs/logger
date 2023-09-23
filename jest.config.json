@@ -1,0 +1,21 @@
+{
+  "preset": "ts-jest",
+  "testEnvironment": "node",
+  "testResultsProcessor": "jest-sonar-reporter",
+  "testRegex": ".spec.ts$",
+  "transform": {
+    "^.+\\.(mt|t|cj|j)s$": [
+      "ts-jest",
+      {
+        "useESM": true
+      }
+    ]
+  },
+  "resetMocks": true,
+  "coverageProvider": "v8",
+  "moduleFileExtensions": ["js", "cjs", "ts", "mts"],
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  },
+  "extensionsToTreatAsEsm": [".ts"]
+}
