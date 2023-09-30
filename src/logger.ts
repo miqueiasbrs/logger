@@ -27,7 +27,7 @@ export class Logger {
     error: 5
   }
 
-  constructor(private requestId: string = '', private metadata: Record<string, any> = {}) {
+  constructor(private requestId: string = '', private metadata?: Record<string, any>) {
     this.logManager.on('log', (logEntry: LogEntry) => {
       const msg = JSON.stringify(logEntry)
       try {
@@ -91,7 +91,11 @@ export class Logger {
       const cla = error.stack.split('\n')
       let idx = 1
       while (idx < cla.length && cla[idx].includes('at Logger')) idx++
-      if (idx < cla.length) logEntry.location = cla[idx].slice(cla[idx].indexOf('(') + 1, cla[idx].length - 1)
+      if (idx < cla.length)
+        logEntry.location = cla[idx]
+          .slice(cla[idx].indexOf('(') + 1, cla[idx].length - 1)
+          .replace('at ', '')
+          .trim()
     }
 
     this.logManager.emit('log', logEntry)
