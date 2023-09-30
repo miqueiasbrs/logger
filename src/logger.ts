@@ -1,4 +1,7 @@
-import EventEmitter from 'events'
+import { EventEmitter } from 'events'
+
+import { writeConsoleLog, writeFileLog } from './mode/index.js'
+import { LOG_CONSOLE_MODE } from './envron.js'
 
 interface LogEntry {
   level: string
@@ -8,18 +11,9 @@ interface LogEntry {
   metadata?: Record<string, any>
 }
 
-interface Level {
-  trace: string
-  debug: string
-  info: string
-  warn: string
-  error: string
-}
-
 export class Logger {
-  private readonly logManager: EventEmitter = new EventEmitter()
-
-  private readonly levels: Record<string, number> = {
+  private readonly _log: EventEmitter = new EventEmitter()
+  private readonly _levels: Record<string, number> = {
     trace: 1,
     debug: 2,
     info: 3,
@@ -27,19 +21,41 @@ export class Logger {
     error: 5
   }
 
-  constructor(private requestId: string = '', private metadata?: Record<string, any>) {
-    this.logManager.on('log', (logEntry: LogEntry) => {
-      const msg = JSON.stringify(logEntry)
+  _requestId = ''
+  _metadata?: Record<string, any>
+
+  constructor() {
+    this._log.on('log', (logEntry: LogEntry) => {
       try {
-        console[logEntry.level as keyof Level](msg)
+        const stdout: string[] = [
+          logEntry.requestId ?? '',
+          JSON.stringify({
+            event: logEntry.event,
+            metadata: logEntry.metadata,
+            location: logEntry.location
+          }),
+          '\n'
+        ]
+
+        writeConsoleLog(logEntry.level, stdout)
+        writeFileLog(logEntry.level, stdout)
       } catch (e) {
-        console.log(msg)
+        console.log(e)
+        console.log(JSON.stringify(logEntry))
       }
     })
   }
 
   static getLogger(): Logger {
     return new Logger()
+  }
+
+  setRequestId(requestId: string): void {
+    this._requestId = requestId
+  }
+
+  setMetadata(metadata: Record<string, any>): void {
+    this._metadata = metadata
   }
 
   trace(message?: any): void {
@@ -62,29 +78,16 @@ export class Logger {
     this.log('error', message)
   }
 
-  setRequestId(requestId: string): void {
-    this.requestId = requestId
-  }
+  log(logLevel: string, message?: any): void {
+    const level = this.__levelToInt(logLevel)
+    if (level < this.__levelToInt(process.env.LOG_LEVEL ?? 'info')) return
 
-  setMetadata(metadata: Record<string, any>): void {
-    this.metadata = metadata
-  }
-
-  private levelToInt(minLevel: string): number {
-    if (minLevel.toLowerCase() in this.levels) {
-      return this.levels[minLevel.toLowerCase()]
-    } else {
-      return 99
+    const logEntry: LogEntry = {
+      level: logLevel,
+      event: message
     }
-  }
-
-  private log(logLevel: string, message?: any): void {
-    const level = this.levelToInt(logLevel)
-    if (level < this.levelToInt(process.env.LOG_LEVEL ?? 'info')) return
-
-    const logEntry: LogEntry = { level: logLevel, event: message }
-    if (this.requestId) logEntry.requestId = this.requestId
-    if (this.metadata) logEntry.metadata = this.metadata
+    if (this._requestId) logEntry.requestId = this._requestId
+    if (this._metadata) logEntry.metadata = this._metadata
 
     const error = new Error('')
     if (error.stack) {
@@ -97,8 +100,15 @@ export class Logger {
           .replace('at ', '')
           .trim()
     }
+    this._log.emit('log', logEntry)
+  }
 
-    this.logManager.emit('log', logEntry)
+  private __levelToInt(minLevel: string): number {
+    if (minLevel.toLowerCase() in this._levels) {
+      return this._levels[minLevel.toLowerCase()]
+    } else {
+      return 99
+    }
   }
 }
 

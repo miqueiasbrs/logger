@@ -11,6 +11,8 @@
     "esModuleInterop": true,
     "strictNullChecks": true,
     "preserveConstEnums": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "moduleResolution": "NodeNext",
     "types": ["node", "jest"],
     "declaration": true
