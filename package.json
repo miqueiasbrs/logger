@@ -1,6 +1,6 @@
 {
   "name": "@capybaracode/logger",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simple logger",
   "main": "./lib/logger.js",
   "types": "./lib/logger.d.ts",
@@ -52,6 +52,7 @@
   },
   "dependencies": {},
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
