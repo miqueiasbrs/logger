@@ -1,5 +1,3 @@
-import path from 'path'
-
 import logger, { Logger } from '../src/logger.js'
 
 describe('Logger', () => {
